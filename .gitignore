@@ -1,0 +1,6 @@
+scheduler-api/.env
+scheduler-api/vendor/
+scheduler-api/storage/*.key
+scheduler-web/node_modules/
+scheduler-web/dist/
+.DS_Store
