@@ -14,6 +14,7 @@ export const Users: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+  const [modalErrorMessage, setModalErrorMessage] = useState(''); // <-- Novo estado para erros de dentro do modal
 
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -52,6 +53,7 @@ export const Users: React.FC = () => {
     setPassword('');
     setPasswordConfirmation('');
     setErrorMessage('');
+    setModalErrorMessage('');
     setIsFormModalOpen(true);
   };
 
@@ -60,12 +62,25 @@ export const Users: React.FC = () => {
     setName(user.name);
     setRole(user.role);
     setErrorMessage('');
+    setModalErrorMessage('');
     setIsFormModalOpen(true);
   };
 
   const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMessage('');
+    setModalErrorMessage('');
+
+    // RQF 1.2 & RQNF3 - Local insertion validations saving to the modal state
+    if (!selectedUser) {
+      if (password.length < 8) {
+        setModalErrorMessage('A senha deve possuir no mínimo 8 caracteres.');
+        return;
+      }
+      if (password !== passwordConfirmation) {
+        setModalErrorMessage('A confirmação de senha não confere.');
+        return;
+      }
+    }
 
     try {
       if (selectedUser) {
@@ -84,10 +99,18 @@ export const Users: React.FC = () => {
       setIsFormModalOpen(false);
       loadUsers();
     } catch (error: any) {
-      // RQNF3 - User-friendly error handling
-      const msg =
-        error.response?.data?.message || 'Erro ao salvar os dados do usuário.';
-      setErrorMessage(msg);
+      // RQNF3 - Displays API validation errors (e.g., duplicate email) within the modal.
+      if (error.response?.data?.errors) {
+        const validationErrors = Object.values(error.response.data.errors)
+          .flat()
+          .join(' ');
+        setModalErrorMessage(validationErrors);
+      } else {
+        setModalErrorMessage(
+          error.response?.data?.message ||
+            'Erro ao salvar os dados do usuário.',
+        );
+      }
     }
   };
 
@@ -212,6 +235,13 @@ export const Users: React.FC = () => {
             <h3 className="text-lg font-bold text-gray-900 mb-4">
               {selectedUser ? 'Editar Usuário' : 'Incluir Novo Usuário'}
             </h3>
+
+            {modalErrorMessage && (
+              <div className="bg-red-50 text-red-700 p-3 rounded-lg mb-4 text-xs border border-red-200">
+                {modalErrorMessage}
+              </div>
+            )}
+
             <form onSubmit={handleSaveUser} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">
