@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Login } from './pages/Login';
 import { Users } from './pages/Users';
 import { Schedule } from './pages/Schedule';
+import { Availabilities } from './pages/Availabilities';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -16,6 +17,8 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({
 
 const Layout: React.FC = () => {
   const { signOut, user } = useAuth();
+  const isAdmin = user?.role === 'administrator';
+
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white shadow border-b border-gray-200">
@@ -36,11 +39,19 @@ const Layout: React.FC = () => {
             >
               Usuários
             </Link>
+
+            {isAdmin && (
+              <Link
+                to="/availabilities"
+                className="text-gray-600 hover:text-indigo-600 font-medium text-sm flex items-center"
+              >
+                Disponibilidades
+              </Link>
+            )}
           </div>
           <div className="flex items-center space-x-4">
             <span className="text-xs bg-gray-100 text-gray-700 px-3 py-1 rounded-full font-medium">
-              {user?.name} (
-              {user?.role === 'administrator' ? 'Admin' : 'Atendente'})
+              {user?.name} ({isAdmin ? 'Admin' : 'Atendente'})
             </span>
             <button
               onClick={signOut}
@@ -55,6 +66,12 @@ const Layout: React.FC = () => {
         <Routes>
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/users" element={<Users />} />
+
+          <Route
+            path="/availabilities"
+            element={isAdmin ? <Availabilities /> : <Navigate to="/schedule" />}
+          />
+
           <Route path="*" element={<Navigate to="/schedule" />} />
         </Routes>
       </main>
