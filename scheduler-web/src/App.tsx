@@ -1,122 +1,88 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { Login } from './pages/Login';
+import { Users } from './pages/Users';
+import { Schedule } from './pages/Schedule';
 
-function App() {
-  const [count, setCount] = useState(0)
+const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const { signed, loading } = useAuth();
+  if (loading)
+    return <div className="p-8 text-center">A carregar aplicação...</div>;
+  return signed ? <>{children}</> : <Navigate to="/login" />;
+};
 
+const Layout: React.FC = () => {
+  const { signOut, user } = useAuth();
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="min-h-screen bg-gray-50">
+      <nav className="bg-white shadow border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-6 flex justify-between h-16 items-center">
+          <div className="flex space-x-6">
+            <span className="font-bold text-indigo-600 text-lg mr-4">
+              Agendador
+            </span>
+            <Link
+              to="/schedule"
+              className="text-gray-600 hover:text-indigo-600 font-medium text-sm flex items-center"
+            >
+              Agendamentos
+            </Link>
+            <Link
+              to="/users"
+              className="text-gray-600 hover:text-indigo-600 font-medium text-sm flex items-center"
+            >
+              Usuários
+            </Link>
+          </div>
+          <div className="flex items-center space-x-4">
+            <span className="text-xs bg-gray-100 text-gray-700 px-3 py-1 rounded-full font-medium">
+              {user?.name} (
+              {user?.role === 'administrator' ? 'Admin' : 'Atendente'})
+            </span>
+            <button
+              onClick={signOut}
+              className="text-sm font-semibold text-red-500 hover:text-red-700 transition"
+            >
+              Sair
+            </button>
+          </div>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+      </nav>
+      <main className="py-8">
+        <Routes>
+          <Route path="/schedule" element={<Schedule />} />
+          <Route path="/users" element={<Users />} />
+          <Route path="*" element={<Navigate to="/schedule" />} />
+        </Routes>
+      </main>
+    </div>
+  );
+};
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+export default function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<LoginWrapper />} />
+          <Route
+            path="*"
+            element={
+              <PrivateRoute>
+                <Layout />
+              </PrivateRoute>
+            }
+          />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  );
 }
 
-export default App
+const LoginWrapper: React.FC = () => {
+  const { signed } = useAuth();
+  return signed ? <Navigate to="/schedule" /> : <Login />;
+};
