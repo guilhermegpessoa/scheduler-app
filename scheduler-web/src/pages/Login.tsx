@@ -15,7 +15,23 @@ export const Login: React.FC = () => {
       setLoading(true);
       await signIn({ email, password });
     } catch (err: any) {
-      setError('Credenciais inválidas. Verifique o e-mail e a senha.');
+      // RQNF3 - Dynamic handling of errors from the backend
+      if (!err.response) {
+        setError(
+          'Não foi possível conectar ao servidor. Verifique se a API está ativa.',
+        );
+      } else if (err.response.status === 500) {
+        setError(
+          'Erro interno no servidor (500). Por favor, verifique os logs do backend.',
+        );
+      } else if (err.response.status === 401) {
+        setError('Credenciais inválidas. Verifique o e-mail e a senha.');
+      } else {
+        setError(
+          err.response.data?.message ||
+            'Ocorreu um erro inesperado ao tentar entrar.',
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -37,7 +53,7 @@ export const Login: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              E-mail
+              E-mail *
             </label>
             <input
               type="email"
@@ -49,7 +65,7 @@ export const Login: React.FC = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Senha
+              Senha *
             </label>
             <input
               type="password"

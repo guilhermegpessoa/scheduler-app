@@ -247,7 +247,7 @@ export const Users: React.FC = () => {
                 <>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
-                      E-mail ***
+                      E-mail *
                     </label>
                     <input
                       type="email"
