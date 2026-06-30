@@ -14,7 +14,7 @@ class ScheduleController extends Controller
     // RQF 2.2 - Availability Registration (Administrators Only)
     public function storeAvailability(Request $request)
     {
-        if (Gate::denies('manage-users')) {
+        if (auth()->user()->role !== 'administrator') {
             return response()->json(['message' => 'Acesso negado.'], 403);
         }
 
@@ -30,7 +30,18 @@ class ScheduleController extends Controller
             return response()->json(['message' => 'A hora final deve ser maior que a hora inicial.'], 400);
         }
 
-        $availability = Availability::create($request->all());
+        $availability = \App\Models\Availability::updateOrCreate(
+            [
+                'user_id' => $request->user_id,
+                'day_of_week' => $request->day_of_week,
+            ],
+            [
+                'start_time' => $request->start_time,
+                'end_time' => $request->end_time,
+                'is_active' => $request->is_active,
+            ]
+        );
+
         return response()->json($availability, 201);
     }
 

@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use App\Models\Availability;
 
 class User extends Authenticatable
 {
@@ -28,23 +27,6 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
-
-    protected static function booted()
-    {
-        static::created(function ($user) {
-            if ($user->role === 'attendant') {
-                foreach (range(1, 5) as $day) {
-                    Availability::create([
-                        'user_id'    => $user->id,
-                        'day_of_week' => $day,
-                        'start_time'  => '08:00',
-                        'end_time'    => '18:00',
-                        'is_active'   => true
-                    ]);
-                }
-            }
-        });
-    }
 
     public function availabilities()
     {
